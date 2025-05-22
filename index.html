@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gestión de Pedidos - Restaurante</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+  /* Reset & basics */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.4s, color 0.4s;
+  }
+  :root {
+    /* Light Theme */
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --card-bg: #ffffff;
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-hover-bg: #0b5ed7;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --shadow-color: rgba(0,0,0,0.15);
+  }
+  body.dark-theme {
+    --bg-color: #121212;
+    --text-color: #f1f1f1;
+    --card-bg: #1e1e1e;
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-hover-bg: #0b5ed7;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --info-color: #0dcaf0;
+    --shadow-color: rgba(0,0,0,0.7);
+  }
+
+  /* Header/Nav */
+  header .navbar {
+    box-shadow: 0 2px 5px var(--shadow-color);
+    background-color: var(--card-bg)!important;
+    padding: 0.5rem 1rem;
+  }
+  header .navbar-brand {
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: var(--btn-primary-bg);
+  }
+  .nav-link {
+    font-weight: 600;
+    color: var(--text-color)!important;
+    transition: color 0.3s;
+  }
+  .nav-link:hover, .nav-link.active {
+    color: var(--btn-primary-bg)!important;
+  }
+  #toggle-theme {
+    border-radius: 50px;
+    min-width: 110px;
+    font-weight: 600;
+  }
+  
+  /* Hero */
+  #hero {
+    background: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1470&q=80') center center/cover no-repeat;
+    height: 320px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-shadow: 1px 1px 7px rgba(0,0,0,0.75);
+  }
+  #hero h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    margin-bottom: 0.3rem;
+  }
+  #hero p {
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+  }
+  #hero a.btn-primary {
+    font-weight: 700;
+    padding: 0.6rem 1.6rem;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    transition: background-color 0.3s, transform 0.3s;
+  }
+  #hero a.btn-primary:hover {
+    background-color: var(--btn-primary-hover-bg);
+    transform: scale(1.05);
+  }
+
+  /* Pedido Form */
+  #pedido {
+    background-color: var(--card-bg);
+    padding: 2rem 2rem 3rem 2rem;
+    border-radius: 14px;
+    box-shadow: 0 3px 15px var(--shadow-color);
+    margin-top: -3rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #pedido h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--btn-primary-bg);
+  }
+  #order-form label {
+    font-weight: 600;
+  }
+  #order-form input[type="text"],
+  #order-form input[type="number"],
+  #order-form textarea {
+    border-radius: 8px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    border: 1px solid #ced4da;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  #order-form input[type="text"]:focus,
+  #order-form input[type="number"]:focus,
+  #order-form textarea:focus {
+    box-shadow: 0 0 8px var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+    outline: none;
+  }
+
+  /* Productos Cards */
+  #product-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .product-card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    padding: 10px 15px;
+    box-shadow: 0 1px 6px var(--shadow-color);
+    flex: 1 1 calc(33.333% - 15px);
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    align-items: center;
+    border: 2px solid transparent;
+  }
+  .product-card:hover {
+    box-shadow: 0 3px 15px var(--shadow-color);
+    transform: translateY(-4px);
+  }
+  .product-card input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.4);
+    cursor: pointer;
+  }
+  .product-info {
+    flex-grow: 1;
+  }
+  .product-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+  .product-category {
+    font-size: 0.85rem;
+    color: var(--info-color);
+  }
+  .product-price {
+    font-weight: 700;
+    color: var(--success-color);
+  }
+  .product-card.selected {
+    border-color: var(--btn-primary-bg);
+    background-color: rgba(13,110,253,0.1);
+  }
+
+  /* Radio buttons payment */
+  #payment-methods {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+  }
+  .form-check-label {
+    cursor: pointer;
+    font-weight: 600;
+  }
+  input[type="radio"] {
+    transform: scale(1.3);
+    margin-right: 8px;
+    cursor: pointer;
+  }
+
+  /* Image preview */
+  #image-preview {
+    margin-top: 0.8rem;
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px var(--shadow-color);
+    display: none;
+  }
+
+  /* Button Register */
+  #order-form button[type="submit"] {
+    font-weight: 900;
+    border-radius: 50px;
+    padding: 12px 40px;
+    box-shadow: 0 4px 10px var(--btn-primary-bg);
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  #order-form button[type="submit"]:hover {
+    background-color: var(--btn-primary-hover-bg);
+    transform: scale(1.05);
+  }
+
+  /* Tabla de pedidos */
+  #ver-pedidos {
+    margin-top: 4rem;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #ver-pedidos h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: var(--btn-primary-bg);
+  }
+  table {
+    background-color: var(--card-bg);
+    box-shadow: 0 3px 20px var(--shadow-color);
+    border-radius: 12px;
+  }
+  th, td {
+    vertical-align: middle !important;
+  }
+  td img {
+    border-radius: 8px;
+    max-width: 50px;
+    max-height: 50px;
+    object-fit: cover;
+  }
+
+  /* Acciones buttons */
+  .btn-action {
+    border-radius: 50px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 6px var(--shadow-color);
+    cursor: pointer;
+    transition: transform 0.25s ease;
+  }
+  .btn-action i {
+    pointer-events: none;
+  }
+  .btn-action:hover {
+    transform: scale(1.2);
+  }
+  .btn-view {
+    background-color: var(--info-color);
+    color: white;
+  }
+  .btn-view:hover {
+    background-color: #0bb8d0;
+  }
+  .btn-delete {
+    background-color: var(--danger-color);
+    color: white;
+  }
+  .btn-delete:hover {
+    background-color: #bb2d3b;
+  }
+
+  /* Buscador y filtros */
+  #filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+  #search-input {
+    flex-grow: 1;
+    max-width: 360px;
+  }
+  select {
+    border-radius: 10px;
+    padding: 6px 12px;
+    border: 1px solid #ced4da;
+    box-shadow: 0 1px 6px var(--shadow-color);
+    transition: border-color 0.3s;
+  }
+  select:focus {
+    outline: none;
+    border-color: var(--btn-primary-bg);
+    box-shadow: 0 0 8px var(--btn-primary-bg);
+  }
+
+  /* Contador animado */
+  #contador-pedidos {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--success-color);
+    margin-bottom: 1rem;
+  }
+
+  /* Modal Details */
+  .modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+  }
+
+  /* Scroll smooth */
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+</head>
+<body>
+<header>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container">
+      <a class="navbar-brand" href="#">🍽️ Restaurante</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="navbarNav" class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a href="#" class="nav-link active">Inicio</a></li>
+          <li class="nav-item"><a href="#pedido" class="nav-link">Hacer Pedido</a></li>
+          <li class="nav-item"><a href="#ver-pedidos" class="nav-link">Ver Pedidos</a></li>
+          <li class="nav-item"><a href="#" class="nav-link">Contacto</a></li>
+        </ul>
+        <button id="toggle-theme" class="btn btn-outline-primary">Modo Oscuro <i class="fa-solid fa-moon"></i></button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<section id="hero" class="d-flex flex-column justify-content-center align-items-center">
+  <h1>Bienvenido a Nuestro Restaurante</h1>
+  <p>¡Disfruta de nuestros deliciosos platillos!</p>
+  <a href="#pedido" class="btn btn-primary"><i class="fa-solid fa-utensils"></i> Iniciar Pedido</a>
+</section>
+
+<main class="container my-5">
+
+  <section id="pedido" aria-label="Formulario de Registro de Pedido">
+    <h2>Registro de Pedido</h2>
+    <form id="order-form" novalidate>
+      <div class="mb-3">
+        <label for="customer-name" class="form-label"><i class="fa-solid fa-user"></i> Nombre del Cliente</label>
+        <input type="text" class="form-control" id="customer-name" placeholder="Tu nombre" required />
+      </div>
+      <div class="mb-3">
+        <label for="table-number" class="form-label"><i class="fa-solid fa-chair"></i> Número de Mesa (1-20)</label>
+        <input type="number" class="form-control" id="table-number" min="1" max="20" placeholder="Número de mesa" required />
+      </div>
+      <fieldset class="mb-3" id="products-fieldset">
+        <legend><i class="fa-solid fa-burger"></i> Productos Disponibles</legend>
+        <div id="product-list" aria-label="Lista de productos">
+          <!-- Productos generados dinámicamente -->
+        </div>
+      </fieldset>
+      <fieldset class="mb-3" id="payment-fieldset">
+        <legend><i class="fa-solid fa-credit-card"></i> Método de Pago</legend>
+        <div id="payment-methods" class="d-flex">
+          <div class="form-check me-4">
+            <input class="form-check-input" type="radio" name="payment-method" id="pay-cash" value="Efectivo" required />
+            <label class="form-check-label" for="pay-cash"><i class="fa-solid fa-money-bill-wave"></i> Efectivo</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="payment-method" id="pay-card" value="Tarjeta" required />
+            <label class="form-check-label" for="pay-card"><i class="fa-solid fa-credit-card"></i> Tarjeta</label>
+          </div>
+        </div>
+      </fieldset>
+      <div class="mb-3">
+        <label for="observations" class="form-label"><i class="fa-solid fa-pen"></i> Observaciones Adicionales</label>
+        <textarea class="form-control" id="observations" rows="3" placeholder="Escribe aquí algún comentario..."></textarea>
+      </div>
+      <div class="mb-3">
+        <label for="image-upload" class="form-label"><i class="fa-solid fa-image"></i> Cargar Imagen (opcional)</label>
+        <input type="file" id="image-upload" accept=".jpg,.jpeg,.png" class="form-control" />
+        <img id="image-preview" alt="Vista previa de la imagen" />
+      </div>
+      <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Registrar Pedido</button>
+    </form>
+  </section>
+
+  <section id="ver-pedidos" aria-label="Panel de Gestión de Pedidos" class="mt-5">
+    <h2>Gestión de Pedidos</h2>
+
+    <p id="contador-pedidos">Pedidos registrados: 0</p>
+
+    <div id="filters" class="mb-3">
+      <input type="text" id="search-input" class="form-control" placeholder="Buscar por Cliente o Mesa..." aria-label="Buscar pedidos"/>
+      <select id="filter-payment" aria-label="Filtrar por método de pago">
+        <option value="">Filtrar por forma de pago</option>
+        <option value="Efectivo">Efectivo</option>
+        <option value="Tarjeta">Tarjeta</option>
+      </select>
+      <select id="filter-product" aria-label="Filtrar por producto">
+        <option value="">Filtrar por producto</option>
+      </select>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle text-center">
+        <thead class="table-primary">
+          <tr>
+            <th>Cliente</th>
+            <th>Mesa</th>
+            <th>Productos</th>
+            <th>Total</th>
+            <th>Pago</th>
+            <th>Imagen</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="order-table-body">
+          <!-- Pedidos añadidos dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="text-center py-4 bg-light mt-5">
+  <div>
+    <a href="#" class="me-3 text-decoration-none text-dark"><i class="fab fa-facebook fa-lg"></i></a>
+    <a href="#" class="me-3 text-decoration-none text-dark"><i class="fab fa-twitter fa-lg"></i></a>
+    <a href="#" class="me-3 text-decoration-none text-dark"><i class="fab fa-instagram fa-lg"></i></a>
+    <a href="#" class="text-decoration-none text-dark"><i class="fab fa-linkedin fa-lg"></i></a>
+  </div>
+  <p class="mt-3 mb-0 small">Contacto: contacto@restaurante.com | Teléfono: 123-456-7890</p>
+  <p class="mb-0 mt-1 small text-muted">© 2024 Todos los derechos reservados</p>
+</footer>
+
+<!-- Modal para ver detalles -->
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-labelledby="modalDetalleLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDetalleLabel">Detalle del Pedido</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="detalle-body">
+        <!-- Contenido generado dinámicamente -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fa-solid fa-xmark"></i> Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  // Simulación productos, id, nombre, categoria, precio
+  const productos = [
+    { id: 1, nombre: "Pizza Margarita", categoria: "Comida", precio: 12.50 },
+    { id: 2, nombre: "Ensalada César", categoria: "Comida", precio: 9.00 },
+    { id: 3, nombre: "Refresco", categoria: "Bebida", precio: 3.50 },
+    { id: 4, nombre: "Postre de Chocolate", categoria: "Postre", precio: 6.00 }
+  ];
+
+  // Elementos DOM principales
+  const productList = document.getElementById('product-list');
+  const orderForm = document.getElementById('order-form');
+  const imageUpload = document.getElementById('image-upload');
+  const imagePreview = document.getElementById('image-preview');
+  const tableBody = document.getElementById('order-table-body');
+  const toggleThemeBtn = document.getElementById('toggle-theme');
+  const contadorPedidos = document.getElementById('contador-pedidos');
+  const searchInput = document.getElementById('search-input');
+  const filterPayment = document.getElementById('filter-payment');
+  const filterProduct = document.getElementById('filter-product');
+  const detalleModal = new bootstrap.Modal(document.getElementById('modalDetalle'));
+  const detalleBody = document.getElementById('detalle-body');
+
+  // Variables estados
+  let pedidos = [];
+  let selectedProducts = new Set();
+
+  // --- Tema ---
+  const savedTheme = localStorage.getItem('theme');
+  if(savedTheme === 'dark') document.body.classList.add('dark-theme');
+  updateToggleThemeText();
+
+  toggleThemeBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+    updateToggleThemeText();
+  });
+  function updateToggleThemeText() {
+    if(document.body.classList.contains('dark-theme')) {
+      toggleThemeBtn.innerHTML = 'Modo Claro <i class="fa-solid fa-sun"></i>';
+    } else {
+      toggleThemeBtn.innerHTML = 'Modo Oscuro <i class="fa-solid fa-moon"></i>';
+    }
+  }
+
+  // --- Renderizar productos como tarjetas ---
+  function renderProductos() {
+    productList.innerHTML = '';
+    productos.forEach(prod => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.setAttribute('tabindex', '0');
+      card.innerHTML = `
+        <input type="checkbox" id="prod-${prod.id}" value="${prod.id}" class="product-checkbox" aria-label="${prod.nombre}" />
+        <div class="product-info">
+          <div class="product-name">${prod.nombre}</div>
+          <div class="product-category">${prod.categoria}</div>
+          <div class="product-price">$${prod.precio.toFixed(2)}</div>
+        </div>
+      `;
+      productList.appendChild(card);
+
+      const checkbox = card.querySelector('input.product-checkbox');
+      checkbox.addEventListener('change', (e) => {
+        if(e.target.checked) {
+          card.classList.add('selected');
+          selectedProducts.add(prod.id);
+        } else {
+          card.classList.remove('selected');
+          selectedProducts.delete(prod.id);
+        }
+      });
+
+      // Click en la tarjeta también activa checkbox
+      card.addEventListener('click', e => {
+        if(e.target.tagName === 'INPUT') return;
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change'));
+      });
+
+      // Key accessible
+      card.addEventListener('keydown', e => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+  }
+
+  renderProductos();
+
+  // --- Cargar imagen y vista previa ---
+  imageUpload.addEventListener('change', () => {
+    const file = imageUpload.files[0];
+    if(!file) {
+      imagePreview.style.display = 'none';
+      imagePreview.src = '';
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if(!validTypes.includes(file.type)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Archivo inválido',
+        text: 'Solo se permiten imágenes .jpg, .jpeg o .png',
+        timer: 3500
+      });
+      imageUpload.value = '';
+      imagePreview.style.display = 'none';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      imagePreview.src = e.target.result;
+      imagePreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // --- Formulario registro pedido ---
+  orderForm.addEventListener('submit', e => {
+    e.preventDefault();
+
+    // Validaciones
+    const cliente = document.getElementById('customer-name').value.trim();
+    const mesa = document.getElementById('table-number').value.trim();
+    const pago = orderForm.querySelector('input[name="payment-method"]:checked');
+    const observaciones = document.getElementById('observations').value.trim();
+    const imagen = imagePreview.src && imagePreview.style.display === 'block' ? imagePreview.src : null;
+
+    if(cliente === '') {
+      return Swal.fire({icon: 'warning', title: 'Debe ingresar el nombre del cliente.'});
+    }
+    if(!(mesa >= 1 && mesa <= 20)) {
+      return Swal.fire({icon: 'warning', title: 'Número de mesa inválido. Debe estar entre 1 y 20.'});
+    }
+    if(selectedProducts.size === 0) {
+      return Swal.fire({icon: 'warning', title: 'Seleccione al menos un producto.'});
+    }
+    if(!pago) {
+      return Swal.fire({icon: 'warning', title: 'Seleccione un método de pago.'});
+    }
+
+    // Calcular total
+    let total = 0;
+    const productosSeleccionados = [];
+    selectedProducts.forEach(id => {
+      const p = productos.find(x => x.id === id);
+      if(p) {
+        total += p.precio;
+        productosSeleccionados.push(p);
+      }
+    });
+
+    // Crear pedido
+    const pedido = {
+      id: Date.now(),
+      cliente,
+      mesa: Number(mesa),
+      productos: productosSeleccionados,
+      total,
+      pago: pago.value,
+      observaciones,
+      imagen
+    };
+
+    // Guardar en array y localStorage
+    pedidos.push(pedido);
+    localStorage.setItem('pedidos', JSON.stringify(pedidos));
+
+    // Mostrar resumen con SweetAlert2
+    let htmlResumen = `
+      <p><strong>Cliente:</strong> ${cliente}</p>
+      <p><strong>Mesa:</strong> ${mesa}</p>
+      <p><strong>Productos:</strong><ul>${productosSeleccionados.map(p => `<li>${p.nombre} - $${p.precio.toFixed(2)}</li>`).join('')}</ul></p>
+      <p><strong>Total estimado:</strong> $${total.toFixed(2)}</p>
+      <p><strong>Método de pago:</strong> ${pago.value}</p>`;
+    if(imagen) {
+      htmlResumen += `<p><strong>Imagen:</strong><br><img src="${imagen}" alt="Miniatura" style="width:100px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.3);"></p>`;
+    }
+    htmlResumen += `<p><strong>Observaciones:</strong> ${observaciones || 'Ninguna'}</p>`;
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Pedido registrado',
+      html: htmlResumen,
+      confirmButtonText: 'Aceptar'
+    });
+
+    resetFormulario();
+    renderPedidos();
+  });
+
+  // Reset form después de enviar
+  function resetFormulario() {
+    orderForm.reset();
+    selectedProducts.clear();
+    const checkboxes = productList.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+      cb.checked = false;
+      cb.parentElement.classList.remove('selected');
+    });
+    imagePreview.style.display = 'none';
+    imagePreview.src = '';
+  }
+
+  // --- Renderizar pedidos en tabla ---
+  function renderPedidos(filtros = {}) {
+    const { search = '', payment = '', productId = null } = filtros;
+    let filtered = pedidos;
+
+    // Filtrar búsqueda cliente o mesa
+    if(search.trim() !== '') {
+      const s = search.trim().toLowerCase();
+      filtered = filtered.filter(p => 
+        p.cliente.toLowerCase().includes(s) || p.mesa.toString() === s
+      );
+    }
+    // Filtrar por método de pago
+    if(payment !== '') {
+      filtered = filtered.filter(p => p.pago === payment);
+    }
+    // Filtrar por producto
+    if(productId !== null) {
+      filtered = filtered.filter(p => p.productos.some(prod => prod.id === Number(productId)));
+    }
+
+    // Contador de pedidos mostrado
+    contadorPedidos.textContent = `Pedidos registrados: ${filtered.length}`;
+
+    // Limpiar tabla
+    tableBody.innerHTML = '';
+
+    if(filtered.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-muted">No hay pedidos que mostrar.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(p => {
+      const tr = document.createElement('tr');
+      
+      const prodNombres = p.productos.map(prod => prod.nombre).join(', ');
+
+      tr.innerHTML = `
+        <td>${p.cliente}</td>
+        <td>${p.mesa}</td>
+        <td class="text-start" title="${prodNombres}">${prodNombres.length > 25 ? prodNombres.slice(0, 24) + '...' : prodNombres}</td>
+        <td>$${p.total.toFixed(2)}</td>
+        <td>${p.pago}</td>
+        <td>${p.imagen ? `<img src="${p.imagen}" alt="Imagen pedido">` : '<i class="fa-regular fa-image text-muted"></i>'}</td>
+        <td class="d-flex justify-content-center gap-2">
+          <button class="btn-action btn-view" title="Ver Detalles" aria-label="Ver detalles pedido" data-id="${p.id}">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+          <button class="btn-action btn-delete" title="Eliminar Pedido" aria-label="Eliminar pedido" data-id="${p.id}">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      `;
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  // --- Eliminar pedido ---
+  tableBody.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+
+    if(btn.classList.contains('btn-delete')) {
+      const idEliminar = Number(btn.getAttribute('data-id'));
+      Swal.fire({
+        title: '¿Confirmas eliminar este pedido?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if(result.isConfirmed) {
+          pedidos = pedidos.filter(p => p.id !== idEliminar);
+          localStorage.setItem('pedidos', JSON.stringify(pedidos));
+          renderPedidos();
+          Swal.fire('Eliminado', 'El pedido ha sido eliminado.', 'success');
+        }
+      });
+    } else if(btn.classList.contains('btn-view')) {
+      // Mostrar modal con detalles
+      const idVer = Number(btn.getAttribute('data-id'));
+      const pedido = pedidos.find(p => p.id === idVer);
+      if(!pedido) return;
+
+      let htmlDetalle = `
+        <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+        <p><strong>Mesa:</strong> ${pedido.mesa}</p>
+        <p><strong>Productos:</strong><ul>`;
+      pedido.productos.forEach(prod => {
+        htmlDetalle += `<li>${prod.nombre} ($${prod.precio.toFixed(2)}) - ${prod.categoria}</li>`;
+      });
+      htmlDetalle += `</ul></p>`;
+      htmlDetalle += `<p><strong>Total:</strong> $${pedido.total.toFixed(2)}</p>`;
+      htmlDetalle += `<p><strong>Método de Pago:</strong> ${pedido.pago}</p>`;
+      htmlDetalle += `<p><strong>Observaciones:</strong> ${pedido.observaciones || 'Ninguna'}</p>`;
+      if(pedido.imagen) {
+        htmlDetalle += `<img src="${pedido.imagen}" alt="Imagen del pedido" style="max-width:100%; border-radius:10px; box-shadow:0 3px 15px rgba(0,0,0,0.3);">`;
+      }
+
+      detalleBody.innerHTML = htmlDetalle;
+      detalleModal.show();
+    }
+  });
+
+  // --- Cargar pedidos de localStorage ---
+  function cargarPedidos() {
+    const data = localStorage.getItem('pedidos');
+    if(data) {
+      try {
+        pedidos = JSON.parse(data);
+      } catch { pedidos = [];}
+    }
+  }
+
+  cargarPedidos();
+  renderPedidos();
+
+  // --- Llenar opciones del filtro productos ---
+  function renderFilterProducts() {
+    const opciones = productos.map(p => `<option value="${p.id}">${p.nombre}</option>`);
+    filterProduct.innerHTML += opciones.join('');
+  }
+  renderFilterProducts();
+
+  // --- Filtrar búsqueda y filtros ---
+  [searchInput, filterPayment, filterProduct].forEach(el => {
+    el.addEventListener('input', () => {
+      renderPedidos({
+        search: searchInput.value,
+        payment: filterPayment.value,
+        productId: filterProduct.value || null
+      });
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
+
